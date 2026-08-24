@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fizik SPM — Makmal Interaktif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16213E;
+    --ink-soft:#2B3A63;
+    --paper:#EEF2F8;
+    --paper-line: rgba(22,33,62,0.07);
+    --amber:#E8A33D;
+    --correct:#1F8A70;
+    --correct-bg:#E3F5EF;
+    --wrong:#C1443C;
+    --wrong-bg:#FBEAE8;
+    --muted:#5B6472;
+    --card:#FFFFFF;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0/32px 32px,
+      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px) 0 0/32px 32px,
+      var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{font-family:'Space Grotesk', sans-serif;}
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  :focus-visible{outline:2px solid var(--amber); outline-offset:2px;}
+
+  /* ===== Header ===== */
+  header{
+    position:relative;
+    background:var(--ink);
+    color:#fff;
+    overflow:hidden;
+    padding:28px 20px 0;
+  }
+  .header-inner{
+    max-width:1100px;
+    margin:0 auto;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:24px;
+    flex-wrap:wrap;
+    padding-bottom:26px;
+    position:relative;
+    z-index:2;
+  }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--amber);
+    margin:0 0 6px;
+  }
+  header h1{
+    margin:0;
+    font-size:clamp(28px,4.2vw,44px);
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  header p.sub{
+    margin:8px 0 0;
+    color:#C7CEE0;
+    font-size:15px;
+    max-width:46ch;
+  }
+  .gauge-wrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    min-width:150px;
+  }
+  .gauge{
+    width:140px;
+    height:78px;
+    position:relative;
+  }
+  .gauge svg{width:100%;height:100%;display:block;}
+  .gauge-needle{
+    transform-origin:70px 70px;
+    transition:transform .6s cubic-bezier(.34,1.4,.64,1);
+  }
+  .gauge-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color:#C7CEE0;
+    letter-spacing:.06em;
+  }
+  .gauge-score{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:20px;
+    color:#fff;
+    margin-top:-30px;
+    position:relative;
+    z-index:2;
+  }
+  .wave-strip{
+    position:relative;
+    height:34px;
+    width:100%;
+    overflow:hidden;
+  }
+  .wave-strip svg{
+    position:absolute;
+    top:0; left:0;
+    height:100%;
+    width:200%;
+    animation:waveMove 9s linear infinite;
+  }
+  @keyframes waveMove{
+    from{transform:translateX(0);}
+    to{transform:translateX(-50%);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .wave-strip svg{animation:none;}
+  }
+
+  /* ===== Layout ===== */
+  .layout{
+    max-width:1100px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:250px 1fr;
+    gap:28px;
+    padding:26px 20px 80px;
+  }
+  @media (max-width:820px){
+    .layout{grid-template-columns:1fr; padding-top:16px;}
+  }
+
+  /* ===== Sidebar ===== */
+  .sidebar-group{margin-bottom:18px;}
+  .sidebar-group h3{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.12em;
+    color:var(--muted);
+    margin:0 0 10px;
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+  }
+  .topic-btn{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    width:100%;
+    text-align:left;
+    background:transparent;
+    border:none;
+    border-left:3px solid transparent;
+    padding:9px 10px;
+    border-radius:6px;
+    cursor:pointer;
+    color:var(--ink-soft);
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:14.5px;
+    margin-bottom:2px;
+    transition:background .15s, border-color .15s, color .15s;
+  }
+  .topic-btn:hover{background:rgba(22,33,62,.05);}
+  .topic-btn.active{
+    background:#fff;
+    border-left-color:var(--amber);
+    color:var(--ink);
+    font-weight:600;
+    box-shadow:0 1px 3px rgba(22,33,62,.08);
+  }
+  .topic-idx{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--muted);
+    min-width:20px;
+  }
+  .topic-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:#D6DCE8;
+    margin-left:auto;
+    flex-shrink:0;
+  }
+  .topic-dot.done{background:var(--correct);}
+  .topic-dot.partial{background:var(--amber);}
+
+  .mobile-nav{
+    display:none;
+    overflow-x:auto;
+    gap:8px;
+    padding-bottom:10px;
+    margin-bottom:6px;
+  }
+  .mobile-nav .chip{
+    flex:0 0 auto;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    padding:7px 12px;
+    border-radius:999px;
+    background:#fff;
+    border:1px solid var(--paper-line);
+    color:var(--ink-soft);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .mobile-nav .chip.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+  @media (max-width:820px){
+    .sidebar{display:none;}
+    .mobile-nav{display:flex;}
+  }
+
+  /* ===== Main content ===== */
+  .topic-header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+    border-bottom:2px solid var(--ink);
+    padding-bottom:12px;
+    margin-bottom:22px;
+  }
+  .topic-header .tk{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .topic-header h2{
+    margin:2px 0 0;
+    font-size:clamp(22px,3vw,30px);
+  }
+  .topic-score{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+    background:var(--ink);
+    color:#fff;
+    padding:5px 12px;
+    border-radius:999px;
+  }
+
+  section.block{margin-bottom:30px;}
+  .block-label{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:16px;
+    color:var(--ink);
+    margin-bottom:14px;
+  }
+  .block-label .tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    background:var(--paper-line);
+    padding:3px 8px;
+    border-radius:5px;
+    color:var(--ink-soft);
+  }
+  .block-label.kbat{color:var(--wrong);}
+  .block-label.kbat .tag{background:var(--wrong-bg); color:var(--wrong);}
+
+  .mcq-card{
+    background:var(--card);
+    border:1px solid var(--paper-line);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    margin-bottom:12px;
+  }
+  .mcq-q{font-weight:600; margin-bottom:10px; font-size:14.5px;}
+  .mcq-opts{display:grid; gap:8px;}
+  .opt-btn{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    text-align:left;
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    border-radius:7px;
+    padding:9px 12px;
+    cursor:pointer;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:14px;
+    color:var(--ink);
+    transition:background .12s,border-color .12s;
+  }
+  .opt-btn:hover:not(:disabled){border-color:var(--ink-soft);}
+  .opt-btn .letter{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    width:20px;height:20px;
+    border-radius:50%;
+    background:#fff;
+    border:1px solid var(--paper-line);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .opt-btn:disabled{cursor:default;}
+  .opt-btn.correct{background:var(--correct-bg); border-color:var(--correct); color:#0F5C49;}
+  .opt-btn.correct .letter{background:var(--correct); color:#fff; border-color:var(--correct);}
+  .opt-btn.wrong{background:var(--wrong-bg); border-color:var(--wrong); color:#8C2E28;}
+  .opt-btn.wrong .letter{background:var(--wrong); color:#fff; border-color:var(--wrong);}
+
+  .qa-card{
+    background:var(--card);
+    border:1px solid var(--paper-line);
+    border-left:3px solid var(--ink);
+    border-radius:var(--radius);
+    padding:16px 18px;
+  }
+  .qa-card.kbat{border-left-color:var(--wrong);}
+  .qa-q{white-space:pre-line; font-size:14.5px; line-height:1.6; margin-bottom:12px;}
+  .reveal-btn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    padding:8px 14px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  .reveal-btn:hover{background:var(--ink-soft);}
+  .qa-answer{
+    display:none;
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px dashed var(--paper-line);
+    font-size:14px;
+    line-height:1.65;
+    white-space:pre-line;
+    color:var(--ink-soft);
+  }
+  .qa-answer.show{display:block;}
+  .qa-answer .lab{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--muted);
+    display:block;
+    margin-bottom:6px;
+  }
+
+  footer{
+    text-align:center;
+    padding:26px 20px 50px;
+    color:var(--muted);
+    font-size:12.5px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <p class="brand-eyebrow">// makmal fizik spm</p>
+      <h1>Fizik SPM Interaktif</h1>
+      <p class="sub">11 topik, Tingkatan 4 &amp; 5 — jawab soalan objektif serta-merta, dedah jawapan struktur &amp; KBAT bila anda sedia.</p>
+    </div>
+    <div class="gauge-wrap">
+      <div class="gauge">
+        <svg viewBox="0 0 140 78">
+          <path d="M 8 70 A 62 62 0 0 1 132 70" fill="none" stroke="#3A4A78" stroke-width="10" stroke-linecap="round"/>
+          <path id="gaugeFill" d="M 8 70 A 62 62 0 0 1 132 70" fill="none" stroke="#E8A33D" stroke-width="10" stroke-linecap="round" stroke-dasharray="195" stroke-dashoffset="195"/>
+          <g class="gauge-needle" id="gaugeNeedle">
+            <line x1="70" y1="70" x2="70" y2="18" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="70" cy="70" r="5" fill="#E8A33D"/>
+          </g>
+        </svg>
+      </div>
+      <div class="gauge-score mono" id="gaugeScore">0/0</div>
+      <div class="gauge-label">SKOR KESELURUHAN</div>
+    </div>
+  </div>
+  <div class="wave-strip">
+    <svg viewBox="0 0 600 34" preserveAspectRatio="none">
+      <path d="M0 17 Q 15 2 30 17 T 60 17 T 90 17 T 120 17 T 150 17 T 180 17 T 210 17 T 240 17 T 270 17 T 300 17 T 330 17 T 360 17 T 390 17 T 420 17 T 450 17 T 480 17 T 510 17 T 540 17 T 570 17 T 600 17"
+        fill="none" stroke="#E8A33D" stroke-width="2" opacity="0.55"/>
+      <path d="M600 17 Q 615 2 630 17 T 660 17 T 690 17 T 720 17 T 750 17 T 780 17 T 810 17 T 840 17 T 870 17 T 900 17 T 930 17 T 960 17 T 990 17 T 1020 17 T 1050 17 T 1080 17 T 1110 17 T 1140 17 T 1170 17 T 1200 17"
+        fill="none" stroke="#E8A33D" stroke-width="2" opacity="0.55"/>
+    </svg>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="mobile-nav" id="mobileNav"></nav>
+  <aside class="sidebar" id="sidebar"></aside>
+  <main id="main"></main>
+</div>
+
+<footer>Bundle Worksheet Fizik SPM — Tingkatan 4 &amp; 5 · disediakan untuk pengajaran &amp; pembelajaran</footer>
+
+<script>
+const TOPICS = [{"tingkatan":"Tingkatan 4","tajuk":"Pengukuran","mcq":[{"q":"Unit SI bagi jisim ialah","opt":["gram","kilogram","tan","miligram"],"ans":1},{"q":"Ralat yang berlaku disebabkan kecuaian pemerhati semasa membaca skala alat disebut","opt":["ralat sistematik","ralat rawak","ralat paralaks","ralat kalibrasi"],"ans":2},{"q":"Angkup vernier mempunyai ketepatan sehingga","opt":["0.1 cm","0.01 cm","0.001 cm","1 cm"],"ans":1},{"q":"Manakah antara berikut ialah kuantiti asas?","opt":["Luas","Isipadu","Jisim","Halaju"],"ans":2},{"q":"Ketakpastian bagi satu bacaan menggunakan pembaris berskala mm ialah","opt":["± 0.5 mm","± 1 mm","± 0.05 mm","± 5 mm"],"ans":0}],"struktur":{"soalan":"Terangkan maksud ketepatan (accuracy) dan kejituan (precision) dalam pengukuran, dengan memberikan satu contoh bagi setiap satu.\n\nSeorang pelajar mengukur diameter sfera menggunakan mikrometer skru dan mendapat bacaan 5.62 mm, 5.60 mm, dan 5.64 mm.\n(a) Hitung nilai purata bacaan.\n(b) Bincangkan sama ada bacaan pelajar ini jitu (precise). Jelaskan.","jawapan":"Ketepatan = hampir dengan nilai sebenar; kejituan = bacaan berulang hampir sama antara satu sama lain.\n(a) Purata = (5.62+5.60+5.64)/3 = 5.62 mm\n(b) Ya, jitu — kerana julat bacaan kecil (5.60–5.64 mm), menunjukkan variasi yang rendah antara ulangan."},"kbat":{"soalan":"Seorang jurutera perlu memilih alat pengukur yang sesuai untuk mengukur ketebalan sekeping kertas (~0.1 mm) berbanding panjang sebuah meja (~2 m). Cadangkan alat yang sesuai bagi setiap situasi dan jelaskan sebabnya.","jawapan":"Kertas: mikrometer skru (ketepatan 0.01 mm, sesuai untuk objek nipis). Meja: pita pengukur/pembaris meter (julat panjang lebih sesuai; ketepatan tinggi tidak diperlukan untuk jarak sebegini)."}},{"tingkatan":"Tingkatan 4","tajuk":"Daya dan Gerakan I","mcq":[{"q":"Formula untuk pecutan ialah","opt":["a = v/t","a = (v-u)/t","a = ut + ½at²","a = v² - u²"],"ans":1},{"q":"Unit bagi momentum ialah","opt":["N","kg m/s","kg m/s²","J"],"ans":1},{"q":"Hukum Pergerakan Newton yang Pertama berkaitan dengan konsep","opt":["daya = jisim × pecutan","inersia","tindakan-tindak balas","tenaga kinetik"],"ans":1},{"q":"Sebuah kereta bergerak dengan halaju seragam di jalan lurus. Daya paduan yang bertindak ke atasnya ialah","opt":["maksimum","sifar","sama dengan berat kereta","tidak dapat ditentukan"],"ans":1},{"q":"Impuls ialah hasil darab","opt":["jisim dan halaju","daya dan masa","jisim dan pecutan","daya dan jarak"],"ans":1}],"struktur":{"soalan":"Sebuah troli berjisim 2 kg bergerak dari keadaan rehat dan mencapai halaju 8 m/s dalam masa 4 s.\n(a) Hitung pecutan troli.\n(b) Hitung daya paduan yang bertindak ke atas troli.\n(c) Hitung momentum troli pada saat ke-4.\n(d) Terangkan kesan ke atas pecutan jika jisim troli digandakan dua kali dengan daya yang sama bertindak ke atasnya.","jawapan":"(a) a = (8-0)/4 = 2 m/s²\n(b) F = ma = 2 × 2 = 4 N\n(c) p = mv = 2 × 8 = 16 kg m/s\n(d) Pecutan akan berkurang kepada separuh (1 m/s²) kerana pecutan berkadar songsang dengan jisim apabila daya tetap (Hukum Newton Kedua)."},"kbat":{"soalan":"Dalam reka bentuk kereta moden, beg udara dan tocang keselamatan digunakan untuk melindungi penumpang semasa perlanggaran. Menggunakan konsep impuls dan momentum, jelaskan bagaimana beg udara mengurangkan risiko kecederaan kepada penumpang.","jawapan":"Perubahan momentum (impuls) semasa perlanggaran adalah tetap. Beg udara memanjangkan masa perlanggaran (Δt) semasa penumpang menyentuhnya. Oleh kerana F = Δp/Δt, apabila Δt bertambah, daya (F) yang bertindak ke atas penumpang berkurang, sekali gus mengurangkan kecederaan."}},{"tingkatan":"Tingkatan 4","tajuk":"Daya dan Gerakan II","mcq":[{"q":"Unit bagi kerja ialah","opt":["Watt","Joule","Newton","Pascal"],"ans":1},{"q":"Formula tekanan ialah","opt":["F/A","F × A","m/V","F × d"],"ans":0},{"q":"Hukum Hooke menyatakan pemanjangan spring berkadar terus dengan","opt":["jisim spring","daya yang dikenakan","suhu persekitaran","luas keratan rentas"],"ans":1},{"q":"Kuasa ditakrifkan sebagai","opt":["daya × jarak","kerja / masa","jisim × pecutan","tenaga × masa"],"ans":1},{"q":"Prinsip Archimedes berkaitan dengan","opt":["tekanan udara","daya tujah ke atas","daya geseran","tenaga kinetik"],"ans":1}],"struktur":{"soalan":"Sebuah spring mempunyai pemalar spring, k = 200 N/m. Satu jasad berjisim 0.5 kg digantung pada spring tersebut (g = 10 m/s²).\n(a) Hitung berat jasad tersebut.\n(b) Hitung pemanjangan spring.\n(c) Hitung tenaga keupayaan kenyal yang tersimpan dalam spring.","jawapan":"(a) W = mg = 0.5 × 10 = 5 N\n(b) x = F/k = 5/200 = 0.025 m\n(c) Ep = ½kx² = ½ × 200 × (0.025)² = 0.0625 J"},"kbat":{"soalan":"Bandingkan reka bentuk tayar kereta lumba F1 (permukaan lebar) dengan tayar basikal (permukaan sempit) dari segi konsep tekanan. Kaitkan jawapan anda dengan fungsi setiap kenderaan.","jawapan":"P = F/A. Tayar F1 lebar → luas sentuhan lebih besar → tekanan lebih rendah namun cengkaman (geseran) lebih tinggi untuk kestabilan pada kelajuan tinggi. Tayar basikal sempit → luas sentuhan kecil → tekanan lebih tinggi, mengurangkan geseran/rintangan untuk pergerakan lebih laju dan cekap tenaga."}},{"tingkatan":"Tingkatan 4","tajuk":"Haba","mcq":[{"q":"Unit muatan haba tentu ialah","opt":["J/kg","J/(kg·°C)","J/°C","J"],"ans":1},{"q":"Haba yang diserap semasa perubahan fasa tanpa perubahan suhu dipanggil","opt":["haba tentu","haba pendam","haba spesifik","haba nyata"],"ans":1},{"q":"Menurut teori kinetik jirim, tekanan gas dalam bekas tertutup meningkat apabila","opt":["isipadu meningkat pada suhu tetap","suhu meningkat pada isipadu tetap","suhu menurun","jisim gas berkurang"],"ans":1},{"q":"Hukum Boyle menerangkan hubungan antara tekanan gas dan","opt":["suhu gas","isipadu gas","jisim gas","ketumpatan gas"],"ans":1},{"q":"Muatan haba tentu air lebih kurang","opt":["1000 J/(kg°C)","4200 J/(kg°C)","2260 J/(kg°C)","900 J/(kg°C)"],"ans":1}],"struktur":{"soalan":"0.5 kg air pada suhu 25°C dipanaskan sehingga mendidih pada 100°C. (Muatan haba tentu air, c = 4200 J/(kg°C))\n(a) Hitung perubahan suhu air.\n(b) Hitung haba yang diperlukan untuk memanaskan air tersebut.\n(c) Jika bekas dipanaskan menggunakan pemanas berkuasa 1000 W, hitung masa yang diambil (andaikan tiada kehilangan haba ke persekitaran).","jawapan":"(a) ΔT = 100 - 25 = 75°C\n(b) Q = mcΔT = 0.5 × 4200 × 75 = 157 500 J\n(c) t = Q/P = 157 500/1000 = 157.5 s"},"kbat":{"soalan":"Jelaskan mengapa periuk masak tekanan (pressure cooker) dapat memasak makanan dengan lebih cepat berbanding periuk biasa, menggunakan konsep hubungan antara tekanan dan takat didih.","jawapan":"Periuk tekanan adalah bekas kedap yang membolehkan tekanan wap dalamnya meningkat melebihi tekanan atmosfera. Peningkatan tekanan ini menaikkan takat didih air melebihi 100°C, membolehkan makanan dimasak pada suhu lebih tinggi, sekali gus mempercepatkan proses memasak."}},{"tingkatan":"Tingkatan 4","tajuk":"Cahaya","mcq":[{"q":"Hukum yang menerangkan pembiasan cahaya dikenali sebagai","opt":["Hukum Newton","Hukum Snell","Hukum Hooke","Hukum Boyle"],"ans":1},{"q":"Indeks biasan bagi kaca lebih kurang","opt":["1.0","1.5","2.0","0.5"],"ans":1},{"q":"Pantulan dalam penuh berlaku apabila sudut tuju di dalam medium tumpat","opt":["sama dengan sudut genting","lebih besar daripada sudut genting","lebih kecil daripada sudut genting","bersamaan sifar"],"ans":1},{"q":"Kanta cembung menghasilkan imej nyata dan songsang apabila objek diletakkan","opt":["di antara F dan kanta","di luar 2F","tepat pada F","tidak dapat menghasilkan imej nyata"],"ans":1},{"q":"Gentian optik berfungsi berdasarkan prinsip","opt":["pembiasan cahaya","pantulan dalam penuh","resapan cahaya","interferens cahaya"],"ans":1}],"struktur":{"soalan":"Seutas gentian optik digunakan dalam kabel internet berkelajuan tinggi.\n(a) Nyatakan prinsip fizik yang membolehkan cahaya bergerak sepanjang gentian optik.\n(b) Nyatakan DUA syarat yang perlu dipenuhi untuk pantulan dalam penuh berlaku.\n(c) Nyatakan satu kelebihan penggunaan gentian optik berbanding kabel kuprum dalam telekomunikasi.","jawapan":"(a) Pantulan dalam penuh.\n(b) (i) Cahaya mesti bergerak dari medium lebih tumpat ke medium kurang tumpat; (ii) sudut tuju mesti lebih besar daripada sudut genting.\n(c) Isyarat dapat dihantar lebih laju dengan kehilangan isyarat yang lebih rendah / kebal terhadap gangguan elektromagnet."},"kbat":{"soalan":"Seorang doktor menggunakan endoskop (yang menggunakan gentian optik) untuk memeriksa bahagian dalam badan pesakit tanpa pembedahan besar. Jelaskan bagaimana sifat cahaya digunakan dalam teknologi ini, dan cadangkan satu lagi aplikasi gentian optik dalam bidang perubatan atau industri.","jawapan":"Endoskop menggunakan berkas gentian optik yang membenarkan cahaya (dan imej) dipantulkan secara dalam penuh sepanjang gentian yang boleh dilentur, membolehkan doktor melihat organ dalaman tanpa pembedahan terbuka. Aplikasi lain: laser gentian optik dalam pembedahan mata / penghantaran data dalam rangkaian internet kabel."}},{"tingkatan":"Tingkatan 4","tajuk":"Kegravitian","mcq":[{"q":"Hukum Graviti Sejagat Newton menyatakan daya tarikan graviti antara dua jisim berkadar songsang dengan","opt":["jarak antara jisim","kuasa dua jarak antara jisim","punca ganda dua jarak","kuasa tiga jarak"],"ans":1},{"q":"Unit bagi medan graviti, g, ialah","opt":["N","N/kg","kg/N","m/s"],"ans":1},{"q":"Nilai pecutan graviti di permukaan Bumi lebih kurang","opt":["6.67 × 10⁻¹¹ m/s²","9.81 m/s²","3 × 10⁸ m/s²","1.0 m/s²"],"ans":1},{"q":"Satelit geopegun (geostationary) mengorbit Bumi dengan tempoh","opt":["1 jam","12 jam","24 jam","1 bulan"],"ans":2},{"q":"Halaju lepas (escape velocity) ialah halaju minimum yang diperlukan untuk","opt":["mengekalkan orbit bulatan","mengatasi tarikan graviti sepenuhnya","jatuh bebas ke Bumi","berhenti bergerak"],"ans":1}],"struktur":{"soalan":"Diberi jisim Bumi, M = 6 × 10²⁴ kg, jejari Bumi, r = 6.4 × 10⁶ m, dan pemalar graviti sejagat, G = 6.67 × 10⁻¹¹ N m²/kg².\n(a) Hitung medan graviti, g, di permukaan Bumi menggunakan g = GM/r².\n(b) Hitung berat objek berjisim 50 kg di permukaan Bumi.\n(c) Jelaskan mengapa berat sebuah objek berkurang apabila dibawa naik ke angkasa lepas, walaupun jisimnya tidak berubah.","jawapan":"(a) g = GM/r² = (6.67×10⁻¹¹ × 6×10²⁴) / (6.4×10⁶)² ≈ 9.8 m/s²\n(b) W = mg = 50 × 9.8 = 490 N\n(c) Berat bergantung pada medan graviti (g), yang berkurang apabila jarak dari pusat Bumi bertambah (g ∝ 1/r²); jisim pula ialah kuantiti tetap yang tidak berubah mengikut lokasi."},"kbat":{"soalan":"Satelit komunikasi diletakkan pada orbit geopegun (~36 000 km dari Bumi) supaya kekal di atas satu lokasi tetap di permukaan Bumi. Jelaskan mengapa satelit sedemikian perlu berada pada altitud tertentu dan bukan lebih rendah, dengan mengaitkan konsep tempoh orbit dan daya graviti.","jawapan":"Tempoh orbit satelit bergantung pada altitudnya — semakin tinggi altitud, semakin panjang tempoh orbit. Untuk kekal di atas satu lokasi tetap di Bumi, tempoh orbit satelit mesti bersamaan tempoh putaran Bumi (24 jam). Ini hanya berlaku pada altitud khusus (~36 000 km) di mana daya tarikan graviti yang lemah pada jarak tersebut menyediakan daya memusat yang tepat untuk kelajuan orbit yang menghasilkan tempoh 24 jam."}},{"tingkatan":"Tingkatan 5","tajuk":"Gelombang","mcq":[{"q":"Formula halaju gelombang ialah","opt":["v = fλ","v = f/λ","v = λ/f","v = f + λ"],"ans":0},{"q":"Gelombang bunyi ialah contoh gelombang","opt":["melintang","membujur","elektromagnet","statik"],"ans":1},{"q":"Fenomena pembelokan gelombang apabila melalui aperture sempit disebut","opt":["pembiasan","resapan (difraksi)","interferens","pantulan"],"ans":1},{"q":"Interferens membina berlaku apabila dua gelombang bertemu dalam keadaan","opt":["fasa berbeza","fasa sama","amplitud berbeza","frekuensi berbeza"],"ans":1},{"q":"Unit bagi frekuensi ialah","opt":["meter","saat","Hertz","Newton"],"ans":2}],"struktur":{"soalan":"Suatu gelombang air mempunyai jarak gelombang 2 m dan frekuensi 5 Hz.\n(a) Hitung halaju gelombang.\n(b) Jika frekuensi digandakan dua kali dengan halaju kekal sama, hitung jarak gelombang baharu.\n(c) Nyatakan syarat aperture (bukaan) supaya resapan gelombang lebih ketara berlaku.","jawapan":"(a) v = fλ = 5 × 2 = 10 m/s\n(b) λ baharu = v/f baharu = 10/10 = 1 m\n(c) Lebar aperture perlu hampir sama atau lebih kecil daripada jarak gelombang."},"kbat":{"soalan":"Jelaskan bagaimana konsep resonans perlu diambil kira dalam reka bentuk bangunan tinggi di kawasan gempa bumi, dengan mengaitkan frekuensi asli struktur bangunan.","jawapan":"Jika frekuensi gegaran gempa bumi hampir sama dengan frekuensi asli bangunan, resonans berlaku dan amplitud ayunan bangunan meningkat secara mendadak, meningkatkan risiko keruntuhan. Jurutera mereka bentuk struktur (contoh: peredam jisim tuned) supaya frekuensi asli bangunan berbeza daripada julat frekuensi gempa yang biasa berlaku di kawasan tersebut."}},{"tingkatan":"Tingkatan 5","tajuk":"Elektrik","mcq":[{"q":"Hukum Ohm menyatakan V =","opt":["IR","I/R","I + R","I - R"],"ans":0},{"q":"Dalam litar bersiri, arus di setiap titik dalam litar adalah","opt":["berbeza-beza","sama","sifar","bergantung kepada rintangan"],"ans":1},{"q":"Kuasa elektrik dikira menggunakan formula","opt":["P = VI","P = V/I","P = I/V","P = V - I"],"ans":0},{"q":"Unit bagi rintangan ialah","opt":["Ampere","Volt","Ohm","Watt"],"ans":2},{"q":"Dalam litar selari, voltan merentasi setiap cabang perintang adalah","opt":["berbeza-beza","sama","sifar","tidak dapat ditentukan"],"ans":1}],"struktur":{"soalan":"Sebuah perintang 5 Ω disambung ke bekalan kuasa 10 V.\n(a) Hitung arus yang mengalir melalui perintang.\n(b) Hitung kuasa yang terhasil.\n(c) Jika perintang tersebut digunakan selama 2 jam, hitung tenaga elektrik yang digunakan dalam kWh.","jawapan":"(a) I = V/R = 10/5 = 2 A\n(b) P = VI = 10 × 2 = 20 W\n(c) E = P × t = 0.02 kW × 2 h = 0.04 kWh"},"kbat":{"soalan":"Sebuah rumah menggunakan pelbagai peralatan elektrik (peti sejuk, penghawa dingin, lampu) yang disambung secara selari, bukan bersiri. Jelaskan sebab pemilihan litar selari untuk sistem pendawaian rumah, berbanding litar bersiri.","jawapan":"Dalam litar selari, setiap peralatan menerima voltan penuh dan boleh dikendalikan secara berasingan (satu peralatan boleh dimatikan/rosak tanpa menjejaskan yang lain). Dalam litar bersiri, jika satu komponen rosak/terputus, keseluruhan litar terputus dan semua peralatan lain akan turut terjejas — tidak praktikal untuk kegunaan rumah."}},{"tingkatan":"Tingkatan 5","tajuk":"Keelektromagnetan","mcq":[{"q":"Peraturan tangan kanan Fleming digunakan untuk menentukan","opt":["arah medan magnet sahaja","hubungan arah daya, arus, dan medan magnet dalam motor","arah aliran elektron","nilai rintangan litar"],"ans":1},{"q":"Prinsip aruhan elektromagnet ditemui oleh","opt":["Newton","Faraday","Ohm","Ampere"],"ans":1},{"q":"Transformer beroperasi berdasarkan prinsip","opt":["arus terus","aruhan elektromagnet","tarikan graviti","resonans mekanikal"],"ans":1},{"q":"Dalam transformer injak naik, bilangan lilitan gegelung sekunder adalah","opt":["lebih sedikit daripada primer","lebih banyak daripada primer","sama dengan primer","sifar"],"ans":1},{"q":"Motor elektrik menukar tenaga elektrik kepada tenaga","opt":["haba","kimia","kinetik/mekanikal","cahaya"],"ans":2}],"struktur":{"soalan":"Sebuah transformer mempunyai 100 lilitan pada gegelung primer dan 500 lilitan pada gegelung sekunder. Voltan input ialah 20 V.\n(a) Tentukan jenis transformer ini (injak naik atau injak turun).\n(b) Hitung voltan output.\n(c) Jika transformer ideal (100% cekap) dan arus primer ialah 2 A, hitung arus sekunder.","jawapan":"(a) Injak naik (Ns > Np)\n(b) Vs/Vp = Ns/Np → Vs = 20 × (500/100) = 100 V\n(c) IpVp = IsVs → 2 × 20 = Is × 100 → Is = 0.4 A"},"kbat":{"soalan":"Stesen janakuasa menghantar elektrik pada voltan sangat tinggi (contoh: 132 kV) melalui talian jarak jauh sebelum diturunkan untuk kegunaan rumah. Jelaskan sebab teknik ini digunakan, dengan mengaitkan konsep kehilangan kuasa, P = I²R.","jawapan":"Menghantar pada voltan tinggi membolehkan arus (I) dikurangkan untuk kuasa yang sama (P = VI). Oleh kerana kehilangan kuasa akibat rintangan talian berkadar dengan kuasa dua arus (P_hilang = I²R), arus yang lebih rendah mengurangkan kehilangan tenaga secara ketara semasa penghantaran jarak jauh, meningkatkan kecekapan sistem."}},{"tingkatan":"Tingkatan 5","tajuk":"Fizik Kuantum","mcq":[{"q":"Kesan fotoelektrik membuktikan bahawa cahaya boleh berkelakuan sebagai","opt":["gelombang sahaja","zarah (foton)","medan magnet","arus elektrik"],"ans":1},{"q":"Tenaga foton dikira menggunakan formula","opt":["E = hf","E = mc²","E = mgh","E = ½mv²"],"ans":0},{"q":"Pemalar Planck, h, mempunyai nilai lebih kurang","opt":["6.63 × 10⁻³⁴ Js","3 × 10⁸ m/s","9.81 m/s²","1.6 × 10⁻¹⁹ C"],"ans":0},{"q":"Fungsi kerja (work function) sesuatu logam merujuk kepada","opt":["tenaga kinetik maksimum elektron","tenaga minimum untuk membebaskan elektron dari permukaan logam","tenaga foton yang datang","frekuensi cahaya tuju"],"ans":1},{"q":"Dualiti gelombang-zarah menyatakan bahawa cahaya dan jirim boleh menunjukkan","opt":["sifat gelombang sahaja","sifat zarah sahaja","kedua-dua sifat gelombang dan zarah","tiada sifat gelombang atau zarah"],"ans":2}],"struktur":{"soalan":"Cahaya dengan frekuensi 6 × 10¹⁴ Hz disinari ke atas permukaan sekeping logam yang mempunyai fungsi kerja 2 × 10⁻¹⁹ J. (h = 6.63 × 10⁻³⁴ Js)\n(a) Hitung tenaga satu foton cahaya tersebut.\n(b) Tentukan sama ada kesan fotoelektrik akan berlaku pada logam tersebut. Jelaskan.\n(c) Jika ia berlaku, hitung tenaga kinetik maksimum elektron yang terpancar.","jawapan":"(a) E = hf = 6.63×10⁻³⁴ × 6×10¹⁴ ≈ 3.98×10⁻¹⁹ J\n(b) Ya, kesan fotoelektrik berlaku kerana tenaga foton (3.98×10⁻¹⁹ J) lebih besar daripada fungsi kerja (2×10⁻¹⁹ J).\n(c) Ek maks = E − W = 3.98×10⁻¹⁹ − 2×10⁻¹⁹ = 1.98×10⁻¹⁹ J"},"kbat":{"soalan":"Panel solar (fotovoltan) menggunakan kesan fotoelektrik untuk menukar cahaya matahari kepada elektrik. Jelaskan mengapa panel solar tidak dapat menjana elektrik daripada semua jenis cahaya, dan cadangkan bagaimana pemilihan bahan panel solar boleh dioptimumkan untuk kecekapan yang lebih tinggi.","jawapan":"Kesan fotoelektrik hanya berlaku jika tenaga satu foton cahaya datang (E = hf) sama atau melebihi fungsi kerja bahan tersebut; cahaya berfrekuensi rendah mungkin mempunyai tenaga foton yang tidak mencukupi untuk membebaskan elektron, tanpa mengira keamatan cahaya. Untuk mengoptimumkan kecekapan, bahan dengan fungsi kerja yang sepadan dengan julat frekuensi cahaya matahari paling lazim (contohnya silikon) perlu dipilih supaya lebih banyak foton berjaya membebaskan elektron."}},{"tingkatan":"Tingkatan 5","tajuk":"Fizik Nuklear","mcq":[{"q":"Nukleus atom terdiri daripada","opt":["proton dan elektron","proton dan neutron","neutron dan elektron","elektron sahaja"],"ans":1},{"q":"Proses pembelahan nukleus berat kepada dua nukleus yang lebih ringan dipanggil","opt":["pelakuran nuklear","pembelahan nuklear (fission)","pereputan alfa","pereputan beta"],"ans":1},{"q":"Sinaran yang paling berkuasa menembusi tetapi paling kurang mengion ialah","opt":["alfa","beta","gama","neutron"],"ans":2},{"q":"Separuh hayat bagi bahan radioaktif merujuk kepada","opt":["masa untuk semua atom asal mereput","masa untuk separuh daripada atom asal mereput","masa untuk tenaga radioaktif habis sepenuhnya","masa reaktor beroperasi sepenuhnya"],"ans":1},{"q":"Tenaga yang dibebaskan dalam reaksi nuklear dikira menggunakan formula","opt":["E = mc","E = mc²","E = m/c²","E = mc³"],"ans":1}],"struktur":{"soalan":"Suatu sampel radioaktif mempunyai separuh hayat 8 hari. Jisim awal sampel ialah 40 g.\n(a) Hitung jisim sampel yang tinggal selepas 16 hari.\n(b) Hitung jisim sampel yang tinggal selepas 24 hari.\n(c) Terangkan mengapa graf pereputan radioaktif berbentuk eksponen dan bukan linear.","jawapan":"(a) 16 hari = 2 separuh hayat → 40 → 20 → 10 g\n(b) 24 hari = 3 separuh hayat → 10 → 5 g\n(c) Kadar pereputan berkadar dengan bilangan atom yang belum reput pada bila-bila masa; oleh kerana bilangan atom berkurang secara berterusan, kadar pereputan turut berkurang secara berkadar, menghasilkan lengkung eksponen, bukan penurunan tetap (linear)."},"kbat":{"soalan":"Bandingkan penggunaan tenaga nuklear dalam reaktor janakuasa (pembelahan terkawal) dengan bom nuklear (pembelahan tidak terkawal). Bincangkan satu kebaikan dan satu risiko penggunaan tenaga nuklear untuk penjanaan elektrik di sesebuah negara.","jawapan":"Reaktor janakuasa: reaksi berantai dikawal menggunakan rod kadmium untuk menyerap neutron lebihan, membebaskan tenaga secara terkawal dan berterusan untuk menjana elektrik. Bom nuklear: reaksi berantai tidak terkawal, membebaskan tenaga secara mendadak dalam masa singkat. Kebaikan tenaga nuklear: sumber tenaga besar tanpa pelepasan gas rumah hijau semasa operasi. Risiko: sisa radioaktif berbahaya dan kesan bencana jika berlaku kebocoran/kegagalan reaktor."}}];
+const letters = ["A","B","C","D"];
+
+// answered[topicIdx] = { mcq: {qIdx: selectedOptIdx}, }
+let answered = TOPICS.map(()=>({}));
+
+function totalStats(){
+  let correct=0, total=0;
+  TOPICS.forEach((t,ti)=>{
+    t.mcq.forEach((q,qi)=>{
+      total++;
+      if(answered[ti][qi]!==undefined && answered[ti][qi]===q.ans) correct++;
+    });
+  });
+  return {correct,total};
+}
+
+function topicStats(ti){
+  const t = TOPICS[ti];
+  let correct=0, attempted=0;
+  t.mcq.forEach((q,qi)=>{
+    if(answered[ti][qi]!==undefined){
+      attempted++;
+      if(answered[ti][qi]===q.ans) correct++;
+    }
+  });
+  return {correct, attempted, total:t.mcq.length};
+}
+
+function updateGauge(){
+  const {correct,total} = totalStats();
+  document.getElementById('gaugeScore').textContent = correct+"/"+total;
+  const pct = total? correct/total : 0;
+  const angle = -90 + pct*180; // -90deg to +90deg
+  document.getElementById('gaugeNeedle').style.transform = "rotate("+angle+"deg)";
+  const dash = 195 * pct;
+  document.getElementById('gaugeFill').setAttribute('stroke-dashoffset', 195-dash);
+}
+
+function renderNav(){
+  const sidebar = document.getElementById('sidebar');
+  const mobileNav = document.getElementById('mobileNav');
+  sidebar.innerHTML = "";
+  mobileNav.innerHTML = "";
+
+  const groups = [["Tingkatan 4"], ["Tingkatan 5"]];
+  groups.forEach(([label])=>{
+    const groupTopics = TOPICS.map((t,i)=>({t,i})).filter(x=>x.t.tingkatan===label);
+    if(!groupTopics.length) return;
+    const g = document.createElement('div');
+    g.className = 'sidebar-group';
+    const h = document.createElement('h3');
+    h.textContent = label;
+    g.appendChild(h);
+    groupTopics.forEach(({t,i})=>{
+      const btn = document.createElement('button');
+      btn.className = 'topic-btn' + (i===current? ' active':'');
+      btn.innerHTML = '<span class="topic-idx mono">'+String(i+1).padStart(2,'0')+'</span><span>'+t.tajuk+'</span><span class="topic-dot"></span>';
+      btn.onclick = ()=>{ current=i; render(); };
+      g.appendChild(btn);
+
+      const chip = document.createElement('button');
+      chip.className = 'chip' + (i===current?' active':'');
+      chip.textContent = String(i+1).padStart(2,'0')+' '+t.tajuk;
+      chip.onclick = ()=>{ current=i; render(); };
+      mobileNav.appendChild(chip);
+    });
+    sidebar.appendChild(g);
+  });
+
+  // dot states
+  document.querySelectorAll('.topic-btn').forEach((btn,idx)=>{
+    const stats = topicStats(idx);
+    const dot = btn.querySelector('.topic-dot');
+    if(stats.attempted===stats.total && stats.total>0) dot.classList.add(stats.correct===stats.total?'done':'partial');
+    else if(stats.attempted>0) dot.classList.add('partial');
+  });
+}
+
+function selectOption(ti,qi,oi){
+  if(answered[ti][qi]!==undefined) return;
+  answered[ti][qi] = oi;
+  render();
+  updateGauge();
+}
+
+function toggleReveal(id){
+  const el = document.getElementById(id);
+  el.classList.toggle('show');
+}
+
+let current = 0;
+
+function render(){
+  renderNav();
+  const t = TOPICS[current];
+  const main = document.getElementById('main');
+  const stats = topicStats(current);
+
+  let mcqHtml = t.mcq.map((q,qi)=>{
+    const selected = answered[current][qi];
+    const opts = q.opt.map((o,oi)=>{
+      let cls = 'opt-btn';
+      if(selected!==undefined){
+        if(oi===q.ans) cls += ' correct';
+        else if(oi===selected) cls += ' wrong';
+      }
+      return '<button class="'+cls+'" '+(selected!==undefined?'disabled':'')+' onclick="selectOption('+current+','+qi+','+oi+')"><span class="letter">'+letters[oi]+'</span><span>'+o+'</span></button>';
+    }).join('');
+    return '<div class="mcq-card"><div class="mcq-q">'+(qi+1)+'. '+q.q+'</div><div class="mcq-opts">'+opts+'</div></div>';
+  }).join('');
+
+  main.innerHTML =
+    '<div class="topic-header">'+
+      '<div><div class="tk mono">'+t.tingkatan+' &middot; Topik '+(current+1)+' / '+TOPICS.length+'</div><h2>'+t.tajuk+'</h2></div>'+
+      '<div class="topic-score mono">'+stats.correct+'/'+stats.total+' betul</div>'+
+    '</div>'+
+    '<section class="block">'+
+      '<div class="block-label"><span class="tag">A</span> Soalan Objektif</div>'+
+      mcqHtml+
+    '</section>'+
+    '<section class="block">'+
+      '<div class="block-label"><span class="tag">B</span> Soalan Struktur</div>'+
+      '<div class="qa-card">'+
+        '<div class="qa-q">'+t.struktur.soalan+'</div>'+
+        '<button class="reveal-btn" onclick="toggleReveal(\'struk-ans\')">Tunjuk Jawapan</button>'+
+        '<div class="qa-answer" id="struk-ans"><span class="lab">Skema Jawapan</span>'+t.struktur.jawapan+'</div>'+
+      '</div>'+
+    '</section>'+
+    '<section class="block">'+
+      '<div class="block-label kbat"><span class="tag">KBAT</span> Kemahiran Berfikir Aras Tinggi</div>'+
+      '<div class="qa-card kbat">'+
+        '<div class="qa-q">'+t.kbat.soalan+'</div>'+
+        '<button class="reveal-btn" onclick="toggleReveal(\'kbat-ans\')">Tunjuk Panduan Jawapan</button>'+
+        '<div class="qa-answer" id="kbat-ans"><span class="lab">Panduan Jawapan</span>'+t.kbat.jawapan+'</div>'+
+      '</div>'+
+    '</section>';
+
+  updateGauge();
+}
+
+render();
+</script>
+</body>
+</html>
