@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modul Diagnostik Fizik Nuklear SPM - Seret & Padan</title>
+<style>
+  :root {
+    --bg-canvas: #0f172a;
+    --card-bg: #1e293b;
+    --card-surface: #334155;
+    --primary: #38bdf8;
+    --primary-dark: #0284c7;
+    --accent: #f59e0b;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #475569;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-canvas);
+    color: var(--text-main);
+    line-height: 1.5;
+    padding: 24px 16px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .app-container {
+    width: 100%;
+    max-width: 960px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-color);
+  }
+
+  header {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .title-group h1 {
+    font-size: 1.5rem;
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .title-group p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+
+  .dashboard-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--card-surface);
+    padding: 10px 18px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+  }
+
+  .stat-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 70px;
+  }
+
+  .stat-badge .label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .stat-badge .value {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+
+  .stat-badge .value.timer {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-badge .value.timer.warning {
+    color: var(--danger);
+    animation: blink 1s infinite alternate;
+  }
+
+  @keyframes blink {
+    from { opacity: 1; }
+    to { opacity: 0.4; }
+  }
+
+  .progress-bar-container {
+    width: 100%;
+    height: 6px;
+    background-color: var(--card-surface);
+    border-radius: 9999px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 100%;
+    background-color: var(--accent);
+    transition: width 1s linear, background-color 0.5s ease;
+  }
+
+  .grid-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 768px) {
+    .grid-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .column-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--primary);
+  }
+
+  .source-bank {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .drag-item {
+    background: #0369a1;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 14px 16px;
+    border-radius: 10px;
+    cursor: grab;
+    user-select: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.15);
+    transition: transform 0.15s, background-color 0.2s, opacity 0.2s;
+  }
+
+  .drag-item:active {
+    cursor: grabbing;
+    transform: scale(0.98);
+  }
+
+  .drag-item.selected {
+    outline: 3px solid var(--accent);
+    background-color: #0284c7;
+  }
+
+  .drag-item.placed {
+    background: #475569;
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .target-bank {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .drop-slot {
+    background: var(--card-surface);
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 12px 16px;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .drop-slot.drag-over {
+    border-color: var(--primary);
+    background: rgba(56, 189, 248, 0.1);
+  }
+
+  .slot-desc {
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    margin-bottom: 8px;
+  }
+
+  .slot-desc strong {
+    color: var(--primary);
+  }
+
+  .slot-dropzone {
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+  }
+
+  .empty-placeholder {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .placed-chip {
+    background: var(--primary-dark);
+    color: white;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 8px 14px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  .placed-chip button {
+    background: transparent;
+    border: none;
+    color: #cbd5e1;
+    font-size: 1.1rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+  }
+
+  .placed-chip button:hover {
+    color: #ffffff;
+  }
+
+  .drop-slot.correct {
+    border-color: var(--success);
+    background-color: rgba(34, 197, 94, 0.15);
+  }
+
+  .drop-slot.incorrect {
+    border-color: var(--danger);
+    background-color: rgba(239, 68, 68, 0.15);
+  }
+
+  .controls-panel {
+    margin-top: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 20px;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 12px;
+  }
+
+  button.btn {
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+
+  button.btn-primary {
+    background: var(--primary);
+    color: #0f172a;
+  }
+
+  button.btn-primary:hover {
+    background: #7dd3fc;
+  }
+
+  button.btn-secondary {
+    background: var(--card-surface);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+  }
+
+  button.btn-secondary:hover {
+    background: #475569;
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .records-section {
+    margin-top: 32px;
+    background: #111827;
+    border-radius: 12px;
+    padding: 16px 20px;
+    border: 1px solid #1f2937;
+  }
+
+  .records-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .records-header h3 {
+    font-size: 0.95rem;
+    color: #e2e8f0;
+  }
+
+  .records-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .record-item {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #1f2937;
+  }
+
+  .record-item:last-child {
+    border-bottom: none;
+  }
+
+  .record-item .record-score {
+    color: var(--text-main);
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <header>
+    <div class="title-group">
+      <h1>Fizik Nuklear: Komponen Reaktor</h1>
+      <p>Padankan setiap komponen dengan fungsi dan bahan yang tepat sebelum masa tamat.</p>
+    </div>
+
+    <div class="dashboard-bar">
+      <div class="stat-badge">
+        <span class="label">Masa Baki</span>
+        <span class="value timer" id="timer-display">01:30</span>
+      </div>
+      <div class="stat-badge">
+        <span class="label">Skor Terbaik</span>
+        <span class="value" id="high-score-display">0 / 5</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="progress-bar-container">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
+
+  <div class="grid-layout">
+    <!-- Kolum Pilihan Komponen (Sumber) -->
+    <div>
+      <div class="column-title">
+        <span>Pilihan Komponen</span>
+        <small style="font-size:0.75rem; color:var(--text-muted);">(Seret atau Klik)</small>
+      </div>
+      <div class="source-bank" id="source-bank"></div>
+    </div>
+
+    <!-- Kolum Fungsi & Bahan (Sasaran) -->
+    <div>
+      <div class="column-title">
+        <span>Fungsi & Penerangan Bahan</span>
+        <span id="completion-counter" style="color:var(--text-muted); font-size:0.8rem;">0/5 Dipadankan</span>
+      </div>
+      <div class="target-bank" id="target-bank"></div>
+    </div>
+  </div>
+
+  <div class="controls-panel">
+    <div class="action-buttons">
+      <button class="btn btn-primary" id="btn-submit" onclick="submitAssessment()">Semak Jawapan</button>
+      <button class="btn btn-secondary" id="btn-reset" onclick="startNewSession()">Mula Semula</button>
+    </div>
+    <div id="status-message" style="font-size: 0.9rem; font-weight: 600;"></div>
+  </div>
+
+  <!-- Bahagian Rekod Skor (localStorage) -->
+  <div class="records-section">
+    <div class="records-header">
+      <h3>Sejarah Percubaan (Tersimpan Secara Tempatan)</h3>
+      <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="clearRecords()">Kosongkan Rekod</button>
+    </div>
+    <ul class="records-list" id="records-list">
+      <li class="record-item"><span>Tiada rekod percubaan disimpan lagi.</span></li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  // Data soalan berpandukan DSKP Fizik KSSM Tingkatan 5 (Bab 6)
+  const QUESTIONS_DATA = [
+    {
+      id: "control_rod",
+      name: "Rod Pengawal",
+      desc: "Menyerap neutron berlebihan bagi mengawal kadar tindak balas pembelahan nukleus (diperbuat daripada Boron atau Kadmium)."
+    },
+    {
+      id: "moderator",
+      name: "Penyederhana",
+      desc: "Memperlahankan gerakan neutron bertenaga tinggi kepada neutron terma supaya pembelahan berantai dapat dikekalkan (Grafit atau Air Berat)."
+    },
+    {
+      id: "coolant",
+      name: "Bahan Penyejuk",
+      desc: "Menyerap kuantiti haba yang tinggi daripada teras reaktor untuk dipindahkan ke penjana stim (Air bertekanan tinggi, Gas CO₂, atau Natrium cecair)."
+    },
+    {
+      id: "biological_shield",
+      name: "Perisai Perlindungan",
+      desc: "Menghalang sinaran berbahaya seperti sinar gama dan neutron pantas daripada terlepas ke persekitaran (Dinding konkrit tebal 2 m berlapis plumbum)."
+    },
+    {
+      id: "fuel_rod",
+      name: "Rod Bahan Api",
+      desc: "Membekalkan nukleus tidak stabil yang boleh dibelah melalui hentaman neutron untuk membebaskan tenaga nuklear (Uranium-235 atau Plutonium-239)."
+    }
+  ];
+
+  const TOTAL_TIME = 90; // 90 saat
+  let timeLeft = TOTAL_TIME;
+  let timerInterval = null;
+  let isSubmitted = false;
+  let selectedSourceId = null;
+
+  // Storan padanan pengguna: { [targetId]: sourceId }
+  let currentMatches = {};
+
+  const LOCAL_STORAGE_KEY_HIGHSCORE = "spm_nuclear_high_score";
+  const LOCAL_STORAGE_KEY_RECORDS = "spm_nuclear_records_list";
+
+  function initApp() {
+    loadScoresFromStorage();
+    startNewSession();
+  }
+
+  function startNewSession() {
+    clearInterval(timerInterval);
+    isSubmitted = false;
+    timeLeft = TOTAL_TIME;
+    currentMatches = {};
+    selectedSourceId = null;
+
+    document.getElementById("btn-submit").disabled = false;
+    document.getElementById("status-message").innerText = "";
+    document.getElementById("timer-display").classList.remove("warning");
+
+    renderBoard();
+    updateDashboard();
+    startTimer();
+  }
+
+  function renderBoard() {
+    const sourceBank = document.getElementById("source-bank");
+    const targetBank = document.getElementById("target-bank");
+    sourceBank.innerHTML = "";
+    targetBank.innerHTML = "";
+
+    // Rawakkan susunan kad pilihan
+    const shuffledSources = [...QUESTIONS_DATA].sort(() => Math.random() - 0.5);
+
+    shuffledSources.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "drag-item";
+      card.id = `source-${item.id}`;
+      card.innerText = item.name;
+      card.draggable = true;
+
+      // Event listener seret desktop
+      card.addEventListener("dragstart", (e) => {
+        if (isSubmitted) return;
+        e.dataTransfer.setData("text/plain", item.id);
+      });
+
+      // Sokongan sentuhan/klik
+      card.addEventListener("click", () => {
+        if (isSubmitted || card.classList.contains("placed")) return;
+        document.querySelectorAll(".drag-item").forEach(c => c.classList.remove("selected"));
+        if (selectedSourceId === item.id) {
+          selectedSourceId = null;
+        } else {
+          selectedSourceId = item.id;
+          card.classList.add("selected");
+        }
+      });
+
+      sourceBank.appendChild(card);
+    });
+
+    // Paparkan slot penerangan (tersusun)
+    QUESTIONS_DATA.forEach(target => {
+      const slot = document.createElement("div");
+      slot.className = "drop-slot";
+      slot.id = `slot-${target.id}`;
+
+      slot.innerHTML = `
+        <div class="slot-desc">${target.desc}</div>
+        <div class="slot-dropzone" id="dropzone-${target.id}">
+          <span class="empty-placeholder">Gugurkan komponen di sini</span>
+        </div>
+      `;
+
+      // Event listener zon drop desktop
+      slot.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        if (!isSubmitted) slot.classList.add("drag-over");
+      });
+
+      slot.addEventListener("dragleave", () => {
+        slot.classList.remove("drag-over");
+      });
+
+      slot.addEventListener("drop", (e) => {
+        e.preventDefault();
+        slot.classList.remove("drag-over");
+        if (isSubmitted) return;
+        const sourceId = e.dataTransfer.getData("text/plain");
+        assignItemToSlot(sourceId, target.id);
+      });
+
+      // Sokongan klik untuk pasang
+      slot.addEventListener("click", () => {
+        if (isSubmitted) return;
+        if (selectedSourceId) {
+          assignItemToSlot(selectedSourceId, target.id);
+          selectedSourceId = null;
+          document.querySelectorAll(".drag-item").forEach(c => c.classList.remove("selected"));
+        }
+      });
+
+      targetBank.appendChild(slot);
+    });
+
+    updateCounters();
+  }
+
+  function assignItemToSlot(sourceId, targetId) {
+    if (!sourceId || isSubmitted) return;
+
+    // Jika item ini telah diletakkan di tempat lain, padamkan dari slot lama
+    for (const [tId, sId] of Object.entries(currentMatches)) {
+      if (sId === sourceId) {
+        delete currentMatches[tId];
+        renderSlotContent(tId);
+      }
+    }
+
+    currentMatches[targetId] = sourceId;
+    renderSlotContent(targetId);
+    updateSourceListStates();
+    updateCounters();
+  }
+
+  function renderSlotContent(targetId) {
+    const dropzone = document.getElementById(`dropzone-${targetId}`);
+    const assignedSourceId = currentMatches[targetId];
+
+    if (!assignedSourceId) {
+      dropzone.innerHTML = `<span class="empty-placeholder">Gugurkan komponen di sini</span>`;
+      return;
+    }
+
+    const itemData = QUESTIONS_DATA.find(q => q.id === assignedSourceId);
+    dropzone.innerHTML = `
+      <div class="placed-chip">
+        <span>${itemData.name}</span>
+        ${!isSubmitted ? `<button title="Keluarkan" onclick="event.stopPropagation(); removeItemFromSlot('${targetId}')">&times;</button>` : ''}
+      </div>
+    `;
+  }
+
+  function removeItemFromSlot(targetId) {
+    if (isSubmitted) return;
+    delete currentMatches[targetId];
+    renderSlotContent(targetId);
+    updateSourceListStates();
+    updateCounters();
+  }
+
+  function updateSourceListStates() {
+    const placedSourceIds = Object.values(currentMatches);
+    QUESTIONS_DATA.forEach(item => {
+      const el = document.getElementById(`source-${item.id}`);
+      if (el) {
+        if (placedSourceIds.includes(item.id)) {
+          el.classList.add("placed");
+          el.classList.remove("selected");
+        } else {
+          el.classList.remove("placed");
+        }
+      }
+    });
+  }
+
+  function updateCounters() {
+    const count = Object.keys(currentMatches).length;
+    document.getElementById("completion-counter").innerText = `${count}/${QUESTIONS_DATA.length} Dipadankan`;
+  }
+
+  function startTimer() {
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateTimerDisplay();
+
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        timeOutSubmission();
+      }
+    }, 1000);
+  }
+
+  function updateTimerDisplay() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    const formatted = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    const timerEl = document.getElementById("timer-display");
+    timerEl.innerText = formatted;
+
+    const progressEl = document.getElementById("progress-bar");
+    const percentage = (timeLeft / TOTAL_TIME) * 100;
+    progressEl.style.width = `${percentage}%`;
+
+    if (timeLeft <= 15) {
+      timerEl.classList.add("warning");
+      progressEl.style.backgroundColor = "var(--danger)";
+    } else {
+      timerEl.classList.remove("warning");
+      progressEl.style.backgroundColor = "var(--accent)";
+    }
+  }
+
+  function timeOutSubmission() {
+    document.getElementById("status-message").innerText = "Masa tamat!";
+    document.getElementById("status-message").style.color = "var(--danger)";
+    submitAssessment(true);
+  }
+
+  function submitAssessment(isAuto = false) {
+    if (isSubmitted) return;
+    isSubmitted = true;
+    clearInterval(timerInterval);
+    document.getElementById("btn-submit").disabled = true;
+
+    let score = 0;
+
+    QUESTIONS_DATA.forEach(target => {
+      const slotEl = document.getElementById(`slot-${target.id}`);
+      const matchedSourceId = currentMatches[target.id];
+
+      if (matchedSourceId === target.id) {
+        score++;
+        slotEl.classList.add("correct");
+      } else {
+        slotEl.classList.add("incorrect");
+      }
+      // Kemas kini paparan chip tanpa butang buang
+      renderSlotContent(target.id);
+    });
+
+    const timeSpent = TOTAL_TIME - timeLeft;
+    const statusMsg = document.getElementById("status-message");
+
+    if (!isAuto) {
+      statusMsg.innerText = `Ujian Selesai! Skor: ${score} / ${QUESTIONS_DATA.length} (Masa: ${timeSpent}s)`;
+      statusMsg.style.color = score === QUESTIONS_DATA.length ? "var(--success)" : "var(--primary)";
+    }
+
+    saveSessionRecord(score, QUESTIONS_DATA.length, timeSpent);
+  }
+
+  function saveSessionRecord(score, total, timeSpent) {
+    // 1. Semak & Kemas Kini Rekod Terbaik (High Score)
+    const currentBest = parseInt(localStorage.getItem(LOCAL_STORAGE_KEY_HIGHSCORE) || "0", 10);
+    if (score > currentBest) {
+      localStorage.setItem(LOCAL_STORAGE_KEY_HIGHSCORE, score);
+    }
+
+    // 2. Simpan Sejarah Percubaan
+    const newRecord = {
+      score: score,
+      total: total,
+      timeSpent: timeSpent,
+      timestamp: new Date().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })
+    };
+
+    let records = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_RECORDS) || "[]");
+    records.unshift(newRecord); // Letak paling hadapan
+    if (records.length > 5) records = records.slice(0, 5); // Simpan 5 rekod terkini sahaja
+
+    localStorage.setItem(LOCAL_STORAGE_KEY_RECORDS, JSON.stringify(records));
+
+    loadScoresFromStorage();
+  }
+
+  function loadScoresFromStorage() {
+    // Muat turun rekod markah tertinggi
+    const bestScore = localStorage.getItem(LOCAL_STORAGE_KEY_HIGHSCORE) || "0";
+    document.getElementById("high-score-display").innerText = `${bestScore} / ${QUESTIONS_DATA.length}`;
+
+    // Muat turun senarai percubaan
+    const records = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY_RECORDS) || "[]");
+    const listEl = document.getElementById("records-list");
+
+    if (records.length === 0) {
+      listEl.innerHTML = `<li class="record-item"><span>Tiada rekod percubaan disimpan lagi.</span></li>`;
+      return;
+    }
+
+    listEl.innerHTML = records.map((rec, index) => `
+      <li class="record-item">
+        <span>Percubaan #${records.length - index} (${rec.timestamp})</span>
+        <span class="record-score">${rec.score}/${rec.total} (${rec.timeSpent}s)</span>
+      </li>
+    `).join("");
+  }
+
+  function clearRecords() {
+    if (confirm("Adakah anda pasti ingin memadam semua rekod skor tempatan?")) {
+      localStorage.removeItem(LOCAL_STORAGE_KEY_HIGHSCORE);
+      localStorage.removeItem(LOCAL_STORAGE_KEY_RECORDS);
+      loadScoresFromStorage();
+    }
+  }
+
+  // Mulakan modul
+  window.addEventListener("DOMContentLoaded", initApp);
+</script>
+</body>
+</html>
